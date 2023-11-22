@@ -12,6 +12,7 @@
         <module>movies-review-service</module>
         <module>movies-service</module>
         <module>reactive-programming-using-reactor</module>
+        <module>movies-info-sevice</module>
     </modules>
 
     <parent>
