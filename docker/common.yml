@@ -1,0 +1,6 @@
+version: '3.7'
+
+networks:
+  application:
+    # using the bridge driver to connect to other containers in the same network using hostnames (instead of IPs - default without bridge).
+    driver: bridge
