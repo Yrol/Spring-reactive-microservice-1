@@ -4,6 +4,7 @@ import blog.yrol.domain.MovieInfo;
 import blog.yrol.service.MovieInfoService;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @RestController
@@ -20,5 +21,17 @@ public class MoviesInfoController {
     @ResponseStatus(HttpStatus.CREATED)
     public Mono<MovieInfo> addMovieInfo(@RequestBody MovieInfo movieInfo) {
         return movieInfoService.addMovieInfo(movieInfo).log();
+    }
+
+    @GetMapping("/moviesinfo")
+    @ResponseStatus(HttpStatus.OK)
+    public Flux<MovieInfo> getAllMoviesInfo() {
+        return movieInfoService.getAllMovies().log();
+    }
+
+    @GetMapping("/moviesinfo/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public Mono<MovieInfo> getMovieById(@PathVariable("id") String id) {
+        return movieInfoService.getMovieById(id).log();
     }
 }

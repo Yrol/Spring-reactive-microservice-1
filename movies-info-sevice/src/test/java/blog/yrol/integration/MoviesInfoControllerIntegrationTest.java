@@ -71,4 +71,45 @@ class MoviesInfoControllerIntegrationTest {
                     assertNotNull(responseBody.getMovieInfoId());
                 });
     }
+
+    @Test
+    void getAllMovies() {
+
+        // Arrange
+
+        // Assert & Act
+        webTestClient
+                .get()
+                .uri(MOVIES_INFO_URL)
+                .exchange()
+                .expectStatus()
+                .is2xxSuccessful()
+                .expectBodyList(MovieInfo.class)
+                .hasSize(2);
+//                .consumeWith(movieInfoEntityExchangeResult -> {
+//                    var responseBody = movieInfoEntityExchangeResult.getResponseBody();
+//                    assert responseBody != null;
+//                    assertEquals(2, responseBody.size());
+//                });
+    }
+
+    @Test
+    void getMovieById() {
+
+        // Arrange
+
+        // Assert & Act
+        webTestClient
+                .get()
+                .uri(MOVIES_INFO_URL + "/abc")
+                .exchange()
+                .expectStatus()
+                .is2xxSuccessful()
+                .expectBody(MovieInfo.class)
+                .consumeWith(movieInfoEntityExchangeResult -> {
+                    var responseBody = movieInfoEntityExchangeResult.getResponseBody();
+                    assert responseBody != null;
+                    assertEquals("The Dark Knight", responseBody.getName());
+                });
+    }
 }
