@@ -1,8 +1,24 @@
 conn = new Mongo();
+
+
+//Adding a user/ profile to Mongo admin table that enable reading and writing data to "movies-db"
+db = conn.getDB("admin");
+db.createUser(
+    {
+        user: "yrol",
+        pwd: "yrol123",
+        roles: [
+            {
+                role: 'readWrite',
+                db: 'movies-db'
+            }
+        ]
+    }
+)
+
+// Adding data to movies-db on creation
 db = conn.getDB("movies-db");
-
 db.moviesCollection.createIndex({ "uniq_id": 1 }, { unique: true });
-
 db.moviesCollection.insert({
                                    "link": "https://www.netflix.com/watch/80049210",
                                    "name": "Dedh Ishqiya",

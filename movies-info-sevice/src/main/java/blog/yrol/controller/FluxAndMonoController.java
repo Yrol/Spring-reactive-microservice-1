@@ -25,7 +25,7 @@ public class FluxAndMonoController {
     /**
      * Sending a stream of data every second
      * The request handling is done in a separate thread (server thread)
-     * The request handling will be done in seperate thread
+     * The request handling will be done in separate thread
      * **/
     @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<Long> stream() {
