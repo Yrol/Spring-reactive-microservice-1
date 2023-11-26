@@ -35,7 +35,7 @@ class MoviesInfoControllerIntegrationTest {
     void setUp() {
         var moviesInfo = List.of(
                 new MovieInfo(null, "Batman Begins", 2005, List.of("Christian Bale", "Michael Cane"), LocalDate.parse("2005-06-15")),
-                new MovieInfo("abc", "The Dark Knight", 2005, List.of("Christian Bale", "Heath Ledger"), LocalDate.parse("2008-07-18"))
+                new MovieInfo("abc", "The Dark Knight", 2008, List.of("Christian Bale", "Heath Ledger"), LocalDate.parse("2008-07-18"))
         );
 
         /**
@@ -111,5 +111,68 @@ class MoviesInfoControllerIntegrationTest {
                     assert responseBody != null;
                     assertEquals("The Dark Knight", responseBody.getName());
                 });
+    }
+
+    @Test
+    void getMovieUsingAnInvalidId() {
+
+        // Arrange
+
+        // Assert & Act
+        webTestClient
+                .get()
+                .uri(MOVIES_INFO_URL + "/def")
+                .exchange()
+                .expectStatus()
+                .isNotFound();
+    }
+
+    @Test
+    void updateMovieById() {
+        // Arrange
+        var movieInfo = new MovieInfo(null, "The Dark Knight Rises", 2012, List.of("Christian Bale", "Joseph Gordon-Levitt"), LocalDate.parse("2012-07-18"));
+
+        // Assert & Act
+        webTestClient
+                .put()
+                .uri(MOVIES_INFO_URL + "/abc")
+                .bodyValue(movieInfo)
+                .exchange()
+                .expectStatus()
+                .is2xxSuccessful()
+                .expectBody(MovieInfo.class)
+                .consumeWith(movieInfoEntityExchangeResult -> {
+                    var responseBody = movieInfoEntityExchangeResult.getResponseBody();
+                    assert responseBody != null;
+                    assertEquals("The Dark Knight Rises", responseBody.getName());
+                });
+    }
+
+    @Test
+    void updateMovieUsingAnInvalidId() {
+        // Arrange
+        var movieInfo = new MovieInfo(null, "The Dark Knight Rises", 2012, List.of("Christian Bale", "Joseph Gordon-Levitt"), LocalDate.parse("2012-07-18"));
+
+        // Assert & Act
+        webTestClient
+                .put()
+                .uri(MOVIES_INFO_URL + "/def")
+                .bodyValue(movieInfo)
+                .exchange()
+                .expectStatus()
+                .isNotFound();
+    }
+
+    @Test
+    void deleteMovieUsingAnId() {
+        // Arrange
+
+        // Assert & Act
+        webTestClient
+                .delete()
+                .uri(MOVIES_INFO_URL + "/abc")
+                .exchange()
+                .expectStatus()
+                .isNoContent();
     }
 }

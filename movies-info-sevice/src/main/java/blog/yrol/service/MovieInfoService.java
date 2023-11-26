@@ -1,12 +1,11 @@
 package blog.yrol.service;
 
 import blog.yrol.domain.MovieInfo;
+import blog.yrol.exception.ResourceNotFoundException;
 import blog.yrol.repository.MovieInfoRepository;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-
-import java.util.List;
 
 @Service
 public class MovieInfoService {
@@ -25,6 +24,22 @@ public class MovieInfoService {
     }
 
     public Mono<MovieInfo> getMovieById(String id) {
-        return movieInfoRepository.findById(id);
+        return movieInfoRepository
+                .findById(id)
+                .switchIfEmpty(Mono.error(new ResourceNotFoundException("Resource not found")));
+    }
+
+    public Mono<MovieInfo> updateMovieInfo(MovieInfo updateMovieInfo, String id) {
+        return movieInfoRepository.findById(id)
+                .flatMap(movieInfo -> {
+                    movieInfo.setCast(updateMovieInfo.getCast());
+                    movieInfo.setYear(updateMovieInfo.getYear());
+                    movieInfo.setName(updateMovieInfo.getName());
+                    return movieInfoRepository.save(movieInfo);
+                }).switchIfEmpty(Mono.error(new ResourceNotFoundException("Resource not found")));
+    }
+
+    public Mono<Void> deleteMovieInfo(String id) {
+        return movieInfoRepository.deleteById(id);
     }
 }
