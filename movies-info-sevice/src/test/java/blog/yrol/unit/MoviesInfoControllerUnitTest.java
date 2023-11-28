@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -55,6 +56,8 @@ public class MoviesInfoControllerUnitTest {
                 .hasSize(2);
     }
 
+
+
     @Test
     void getMovieById() {
         var movieInfo = new MovieInfo("abc", "The Dark Knight", 2008, List.of("Christian Bale", "Heath Ledger"), LocalDate.parse("2008-07-18"));
@@ -76,7 +79,7 @@ public class MoviesInfoControllerUnitTest {
     }
 
     @Test
-    void createMovie() {
+    void testCreateMovie_whenValidDataIsProvided_createAndReturnMovie() {
         var movieInfo = new MovieInfo(UUID.randomUUID().toString(), "The Dark Knight", 2008, List.of("Christian Bale", "Heath Ledger"), LocalDate.parse("2008-07-18"));
 
         when(movieInfoServiceMock.addMovieInfo(any(MovieInfo.class))).thenReturn(Mono.just(movieInfo));
@@ -93,6 +96,30 @@ public class MoviesInfoControllerUnitTest {
                     var responseBody = movieInfoEntityExchangeResult.getResponseBody();
                     assert responseBody != null;
                     assertNotNull(responseBody.getMovieInfoId());
+                });
+    }
+
+    @Test
+    void testCreateMovie_whenInvalidDataIsProvided_returnValidationError() {
+        var movieInfo = new MovieInfo(UUID.randomUUID().toString(), "", -2008, List.of(""), LocalDate.parse("2008-07-18"));
+
+        // Not required since it won't reach the service layer as the validation error will be thrown at controller level
+//        when(movieInfoServiceMock.addMovieInfo(any(MovieInfo.class))).thenReturn(Mono.just(movieInfo));
+
+        webTestClient
+                .post()
+                .uri(MOVIES_INFO_URL)
+                .bodyValue(movieInfo)
+                .exchange()
+                .expectStatus()
+                .isBadRequest()
+                .expectBody(String.class)
+                .consumeWith(stringEntityExchangeResult -> {
+                   var responseBody = stringEntityExchangeResult.getResponseBody();
+                    System.out.println(responseBody);
+
+                    // Asserting against the validation errors thrown by GlobalExceptionHandler -> handleRequestBodyException
+                    assertEquals("movieInfo.cast must be present,movieInfo.name must be present,movieInfo.year must be a positive value", responseBody);
                 });
     }
 
