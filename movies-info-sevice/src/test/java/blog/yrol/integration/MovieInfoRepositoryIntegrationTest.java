@@ -28,7 +28,7 @@ class MovieInfoRepositoryIntegrationTest {
     void setUp() {
         var moviesInfo = List.of(
                 new MovieInfo(null, "Batman Begins", 2005, List.of("Christian Bale", "Michael Cane"), LocalDate.parse("2005-06-15")),
-                new MovieInfo("abc", "The Dark Knight", 2005, List.of("Christian Bale", "Heath Ledger"), LocalDate.parse("2008-07-18"))
+                new MovieInfo("abc", "The Dark Knight", 2008, List.of("Christian Bale", "Heath Ledger"), LocalDate.parse("2008-07-18"))
         );
 
         /**
@@ -115,6 +115,33 @@ class MovieInfoRepositoryIntegrationTest {
                     assertEquals(2023, movieInfo.getYear());
                     assertEquals("The Dark Knight",movieInfo.getName());
                 })
+                .verifyComplete();
+    }
+
+    @Test
+    void findByYear() {
+
+        // Arrange
+
+        // Act
+        var moviesInfoFlux = movieInfoRepository.findByYear(2005).log();
+
+        // Assert
+        StepVerifier.create(moviesInfoFlux)
+                .expectNextCount(1)
+                .verifyComplete();
+    }
+
+    @Test
+    void findByName() {
+        // Arrange
+
+        // Act
+        var moviesInfoFlux = movieInfoRepository.findByName("Batman Begins").log();
+
+        // Assert
+        StepVerifier.create(moviesInfoFlux)
+                .expectNextCount(1)
                 .verifyComplete();
     }
 

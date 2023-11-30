@@ -164,6 +164,51 @@ class MoviesInfoControllerIntegrationTest {
     }
 
     @Test
+    void getMoviesByValidYear() {
+        // Arrange
+
+        // Assert & Act
+        webTestClient
+                .get()
+                .uri(MOVIES_INFO_URL + "/year/2008")
+                .exchange()
+                .expectStatus()
+                .is2xxSuccessful()
+                .expectBodyList(MovieInfo.class)
+                .hasSize(1);
+    }
+
+    @Test
+    void getMoviesByInvalidYear() {
+        // Arrange
+
+        // Assert & Act
+        webTestClient
+                .get()
+                .uri(MOVIES_INFO_URL + "/year/2048")
+                .exchange()
+                .expectStatus()
+                .is2xxSuccessful()
+                .expectBodyList(MovieInfo.class)
+                .hasSize(0);
+    }
+
+    @Test
+    void getMoviesByValidName() {
+        // Arrange
+
+        // Assert & Act
+        webTestClient
+                .get()
+                .uri(MOVIES_INFO_URL + "/name/Batman Begins")
+                .exchange()
+                .expectStatus()
+                .is2xxSuccessful()
+                .expectBodyList(MovieInfo.class)
+                .hasSize(1);
+    }
+
+    @Test
     void deleteMovieUsingAnId() {
         // Arrange
 

@@ -1,7 +1,6 @@
 package blog.yrol.service;
 
 import blog.yrol.domain.MovieInfo;
-import blog.yrol.exception.ResourceNotFoundException;
 import blog.yrol.repository.MovieInfoRepository;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -36,6 +35,14 @@ public class MovieInfoService {
                     movieInfo.setName(updateMovieInfo.getName());
                     return movieInfoRepository.save(movieInfo);
                 });
+    }
+
+    public Flux<MovieInfo> getMoviesByYear(Integer year) {
+        return movieInfoRepository.findByYear(year);
+    }
+
+    public Flux<MovieInfo> getMoviesByName(String name) {
+        return movieInfoRepository.findByName(name);
     }
 
     public Mono<Void> deleteMovieInfo(String id) {

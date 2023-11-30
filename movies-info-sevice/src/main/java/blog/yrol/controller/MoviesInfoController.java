@@ -62,6 +62,24 @@ public class MoviesInfoController {
                 .log();
     }
 
+    /**
+     * Getting all movies by year
+     * **/
+    @GetMapping("/moviesinfo/year/{year}")
+    @ResponseStatus(HttpStatus.OK)
+    public Flux<MovieInfo> getMoviesByYear(@PathVariable("year") Integer year) {
+        return movieInfoService.getMoviesByYear(year);
+    }
+
+    /**
+     * Getting all movies by name
+     * */
+    @GetMapping("/moviesinfo/name/{name}")
+    @ResponseStatus(HttpStatus.OK)
+    public Flux<MovieInfo> getMoviesByName(@PathVariable("name") String name) {
+        return movieInfoService.getMoviesByName(name);
+    }
+
     @DeleteMapping("/moviesinfo/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public Mono<Void> deleteMovieById(@PathVariable("id") String id) {
