@@ -25,8 +25,7 @@ public class MovieInfoService {
 
     public Mono<MovieInfo> getMovieById(String id) {
         return movieInfoRepository
-                .findById(id)
-                .switchIfEmpty(Mono.error(new ResourceNotFoundException("Resource not found")));
+                .findById(id);
     }
 
     public Mono<MovieInfo> updateMovieInfo(MovieInfo updateMovieInfo, String id) {
@@ -36,7 +35,7 @@ public class MovieInfoService {
                     movieInfo.setYear(updateMovieInfo.getYear());
                     movieInfo.setName(updateMovieInfo.getName());
                     return movieInfoRepository.save(movieInfo);
-                }).switchIfEmpty(Mono.error(new ResourceNotFoundException("Resource not found")));
+                });
     }
 
     public Mono<Void> deleteMovieInfo(String id) {

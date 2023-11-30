@@ -3,6 +3,7 @@ package blog.yrol.controller;
 import blog.yrol.domain.MovieInfo;
 import blog.yrol.service.MovieInfoService;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -31,16 +32,34 @@ public class MoviesInfoController {
         return movieInfoService.getAllMovies().log();
     }
 
+    /**
+     * Get movie info by ID
+     * Doesn't rely on a default response, ex; @ResponseStatus(HttpStatus.OK), since the response could vary. Ex: movie not found & etc
+     * Mapping getMovieById(MovieInfo) to the ResponseEntity
+     * **/
     @GetMapping("/moviesinfo/{id}")
-    @ResponseStatus(HttpStatus.OK)
-    public Mono<MovieInfo> getMovieById(@PathVariable("id") String id) {
-        return movieInfoService.getMovieById(id).log();
+    public Mono<ResponseEntity<MovieInfo>> getMovieById(@PathVariable("id") String id) {
+        return movieInfoService.getMovieById(id)
+                .map(movieInfo -> {
+                    return ResponseEntity.ok().body(movieInfo);
+                })
+                .switchIfEmpty(Mono.just(ResponseEntity.notFound().build()))// return not found if
+                .log();
     }
 
+    /**
+     * Update movie info by ID
+     * Doesn't rely on a default response, ex; @ResponseStatus(HttpStatus.OK), since the response could vary. Ex: movie not found & etc
+     * Mapping updatedMovieInfo(MovieInfo) to the ResponseEntity
+     * **/
     @PutMapping("/moviesinfo/{id}")
-    @ResponseStatus(HttpStatus.OK)
-    public Mono<MovieInfo> updateMovieById(@RequestBody MovieInfo movieInfo, @PathVariable("id") String id) {
-        return movieInfoService.updateMovieInfo(movieInfo, id).log();
+    public Mono<ResponseEntity<MovieInfo>> updateMovieById(@RequestBody MovieInfo updatedMovieInfo, @PathVariable("id") String id) {
+        return movieInfoService.updateMovieInfo(updatedMovieInfo, id)
+                .map(movieInfo -> {
+                    return ResponseEntity.ok().body(movieInfo);
+                })
+                .switchIfEmpty(Mono.just(ResponseEntity.notFound().build())) // return not found response if update movie is not found in DB
+                .log();
     }
 
     @DeleteMapping("/moviesinfo/{id}")
