@@ -10,7 +10,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @NoArgsConstructor
 @AllArgsConstructor
 @Document // Mongo DB
-public class Domain {
+public class Review {
 
     @Id
     private String reviewId;
