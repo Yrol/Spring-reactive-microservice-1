@@ -51,7 +51,7 @@ class MoviesInfoControllerIntegrationTest {
     }
 
     @Test
-    void addMovieInfo() {
+    void testAddMovieInfo_whenValidDataIsProvided_returnSuccessWithNewMovie() {
 
         // Arrange
         var movieInfo = new MovieInfo(null, "Spider-Man: Homecoming", 2005, List.of("Tom Holland"), LocalDate.parse("2017-06-15"));
@@ -73,7 +73,7 @@ class MoviesInfoControllerIntegrationTest {
     }
 
     @Test
-    void getAllMovies() {
+    void testGetAllMovies_whenCallingTheApi_returnAllMovies() {
 
         // Arrange
 
@@ -94,7 +94,7 @@ class MoviesInfoControllerIntegrationTest {
     }
 
     @Test
-    void getMovieById() {
+    void testGetMovieById_whenValidIdIsProvided_returnMovie() {
 
         // Arrange
 
@@ -114,7 +114,7 @@ class MoviesInfoControllerIntegrationTest {
     }
 
     @Test
-    void getMovieUsingAnInvalidId() {
+    void testGetMovie_whenAnInvalidIdProvided_returnNotFoundError() {
 
         // Arrange
 
@@ -128,7 +128,7 @@ class MoviesInfoControllerIntegrationTest {
     }
 
     @Test
-    void updateMovieById() {
+    void testUpdateMovie_whenValidIdIsProvided_returnUpdatedMovie() {
         // Arrange
         var movieInfo = new MovieInfo(null, "The Dark Knight Rises", 2012, List.of("Christian Bale", "Joseph Gordon-Levitt"), LocalDate.parse("2012-07-18"));
 
@@ -149,7 +149,7 @@ class MoviesInfoControllerIntegrationTest {
     }
 
     @Test
-    void updateMovieUsingAnInvalidId() {
+    void testUpdateMovie_whenUsingAnInvalidId_returnNotFound() {
         // Arrange
         var movieInfo = new MovieInfo(null, "The Dark Knight Rises", 2012, List.of("Christian Bale", "Joseph Gordon-Levitt"), LocalDate.parse("2012-07-18"));
 
@@ -164,7 +164,7 @@ class MoviesInfoControllerIntegrationTest {
     }
 
     @Test
-    void getMoviesByValidYear() {
+    void testGetMovies_whenValidYearIsProvided_returnEligibleMovies() {
         // Arrange
 
         // Assert & Act
@@ -179,7 +179,7 @@ class MoviesInfoControllerIntegrationTest {
     }
 
     @Test
-    void getMoviesByInvalidYear() {
+    void testGetMoviesBy_whenAnInvalidYearProvided_returnEmptyList() {
         // Arrange
 
         // Assert & Act
@@ -194,7 +194,7 @@ class MoviesInfoControllerIntegrationTest {
     }
 
     @Test
-    void getMoviesByValidName() {
+    void testGetMoviesByName_whenValidNameIsProvided_returnEligibleMovies() {
         // Arrange
 
         // Assert & Act
@@ -209,7 +209,7 @@ class MoviesInfoControllerIntegrationTest {
     }
 
     @Test
-    void deleteMovieUsingAnId() {
+    void testDeleteMovie_whenValidOrInvalidIdIsProvided_returnNoContentResponse() {
         // Arrange
 
         // Assert & Act

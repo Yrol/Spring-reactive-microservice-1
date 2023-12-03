@@ -60,7 +60,7 @@ class MovieInfoRepositoryIntegrationTest {
     }
 
     @Test
-    void findById() {
+    void testFindById_whenValidIdIsProvided_returnMovie() {
 
         // Arrange
 
@@ -77,7 +77,7 @@ class MovieInfoRepositoryIntegrationTest {
     }
 
     @Test
-    void saveMovieInfo() {
+    void testSaveMovieInfo_whenValidInfoProvided_returnNewlyCreatedMovie() {
         // Arrange
         var movieInfoSave = new MovieInfo(null, "Spider-Man: Homecoming", 2005, List.of("Tom Holland"), LocalDate.parse("2017-06-15"));
 
@@ -95,7 +95,7 @@ class MovieInfoRepositoryIntegrationTest {
     }
 
     @Test
-    void updateMovieInfo() {
+    void testUpdateMovieInfo_whenValidInfoIsProvided_returnUpdatedMovie() {
         // Arrange
 
         /**
@@ -119,7 +119,7 @@ class MovieInfoRepositoryIntegrationTest {
     }
 
     @Test
-    void findByYear() {
+    void testFindByYear_whenValidYearProvided_returnMoviesFoundByYear() {
 
         // Arrange
 
@@ -133,7 +133,7 @@ class MovieInfoRepositoryIntegrationTest {
     }
 
     @Test
-    void findByName() {
+    void testFindByName_whenValidNameProvided_returnMoviesFoundByName() {
         // Arrange
 
         // Act
@@ -146,7 +146,7 @@ class MovieInfoRepositoryIntegrationTest {
     }
 
     @Test
-    void deleteMovieInfo() {
+    void testDeleteMovieInfo_whenValidOrInvalidMovieIdProvided_returnNoContentResponse() {
 
         // Arrange
 
