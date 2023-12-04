@@ -14,7 +14,7 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
@@ -38,7 +38,7 @@ public class MoviesInfoReviewRouterIntegrationTest {
          * Review ID is null, and it will be auto generated when saving
          * **/
         var reviewList = List.of(
-                new Review(null, 1L, "Awesome movie", 9.0),
+                new Review("1", 1L, "Awesome movie", 9.0),
                 new Review(null, 1L, "Awesome movie 1", 9.0),
                 new Review(null, 2L, "Awesome movie 2", 9.0)
         );
@@ -59,7 +59,7 @@ public class MoviesInfoReviewRouterIntegrationTest {
         // Assert & Act
         webTestClient
                 .post()
-                .uri("/v1/reviews")
+                .uri(REVIEWS_URL)
                 .bodyValue(review)
                 .exchange()
                 .expectStatus().isCreated()
@@ -68,6 +68,43 @@ public class MoviesInfoReviewRouterIntegrationTest {
                     var savedReview = reviewResponse.getResponseBody();
                     assert savedReview != null;
                     assertNotNull(savedReview.getReviewId());
+                });
+    }
+
+    @Test
+    void testGetReviews_whenCallingTheApi_returnAllAvailableReviews() {
+        // Arrange
+
+        // Assert & act
+        webTestClient
+                .get()
+                .uri(REVIEWS_URL)
+                .exchange()
+                .expectStatus().is2xxSuccessful()
+                .expectBodyList(Review.class)
+                .hasSize(3);
+    }
+
+    @Test
+    void testUpdateReview_whenProvidingValidInputs_returnUpdatedReview() {
+
+        String updateMovieComment = "Awesome movie update";
+
+        // Arrange
+        var review = new Review(null, 1L, updateMovieComment, 9.0);
+
+        // Assert & Act
+        webTestClient
+                .put()
+                .uri(REVIEWS_URL + "/1")
+                .bodyValue(review)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(Review.class)
+                .consumeWith(reviewResponse -> {
+                    var updatedReview = reviewResponse.getResponseBody();
+                    assert updatedReview != null;
+                    assertEquals(updateMovieComment, updatedReview.getComment());
                 });
     }
 

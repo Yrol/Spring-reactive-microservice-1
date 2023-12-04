@@ -29,4 +29,31 @@ public class ReviewHandler {
                         ServerResponse.status(HttpStatus.CREATED)
                                 .bodyValue(savedReview));
     }
+
+    public Mono<ServerResponse> getReviews(ServerRequest request) {
+        var reviewsFlux = reviewReactiveRepository.findAll();
+        return ServerResponse.ok().body(reviewsFlux, Review.class);
+    }
+
+    public Mono<ServerResponse> putReviews(ServerRequest serverRequest) {
+
+        // Getting the review ID
+        var reviewId = serverRequest.pathVariable("id");
+        var existingReview  = reviewReactiveRepository.findById(reviewId);
+
+        /**
+         * Converting the existing fetched review using flatmap to Review type
+         * Map requested values to existing review using map and return
+         * Use flatmap again to save the updated review and send response as response with success
+         * **/
+        return existingReview
+                .flatMap(review -> serverRequest.bodyToMono(Review.class)
+                        .map(reqReview -> {
+                            review.setComment(reqReview.getComment());
+                            review.setRating(reqReview.getRating());
+                            return review;
+                        })
+                        .flatMap(reviewReactiveRepository::save)
+                        .flatMap(savedReview -> ServerResponse.ok().bodyValue(savedReview)));
+    }
 }

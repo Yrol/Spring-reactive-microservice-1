@@ -48,6 +48,7 @@ class MoviesInfoControllerIntegrationTest {
 
     @AfterEach
     void tearDown() {
+        movieInfoRepository.deleteAll().block();
     }
 
     @Test

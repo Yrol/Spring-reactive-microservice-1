@@ -17,10 +17,16 @@ public class ReviewRouter {
 
     @Bean
     public RouterFunction<ServerResponse> reviewsRoute(ReviewHandler reviewsHandler) {
+
+        /**
+         * Using nested endpoints since "/v1/reviews" is common
+         * **/
         return route()
                 .nest(path("/v1/reviews"), builder ->
                         builder
-                                .POST("", reviewsHandler::addReview))
+                                .POST("", reviewsHandler::addReview)
+                                .GET("", reviewsHandler::getReviews)
+                                .PUT("/{id}", reviewsHandler::putReviews))
                 .GET("/v1/helloworld", (request -> ServerResponse.ok().bodyValue("HelloWorld")))
                 .build();
     }
