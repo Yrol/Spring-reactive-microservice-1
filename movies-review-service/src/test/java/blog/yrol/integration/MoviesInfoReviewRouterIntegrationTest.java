@@ -42,7 +42,7 @@ public class MoviesInfoReviewRouterIntegrationTest {
                 new Review(null, 1L, "Awesome movie 1", 9.0),
                 new Review(null, 2L, "Awesome movie 2", 9.0)
         );
-        
+
         reviewReactiveRepository.saveAll(reviewList).blockLast();
     }
 
@@ -78,6 +78,20 @@ public class MoviesInfoReviewRouterIntegrationTest {
         // Assert & act
         webTestClient
                 .get()
+                .uri(REVIEWS_URL + "?movieInfoId=1")
+                .exchange()
+                .expectStatus().is2xxSuccessful()
+                .expectBodyList(Review.class)
+                .hasSize(2);
+    }
+
+    @Test
+    void testReviewsByMovieId_whenValidMovieIdIsProvided_returnAllAvailableReviews() {
+        // Arrange
+
+        // Assert & act
+        webTestClient
+                .get()
                 .uri(REVIEWS_URL)
                 .exchange()
                 .expectStatus().is2xxSuccessful()
@@ -108,4 +122,15 @@ public class MoviesInfoReviewRouterIntegrationTest {
                 });
     }
 
+    @Test
+    void testDeleteReview_whenValidReviewIdProvided_deleteReviewAndReturnNoContentResponse() {
+        // Arrange
+        
+        // Assert & Act
+        webTestClient
+                .delete()
+                .uri(REVIEWS_URL + "/1")
+                .exchange()
+                .expectStatus().isNoContent();
+    }
 }

@@ -31,6 +31,14 @@ public class ReviewHandler {
     }
 
     public Mono<ServerResponse> getReviews(ServerRequest request) {
+
+        var movieInfoId = request.queryParam("movieInfoId");
+
+        if(movieInfoId.isPresent()) {
+            var reviewsFlux = reviewReactiveRepository.findReviewsByMovieInfoId(Long.valueOf(movieInfoId.get()));
+            return ServerResponse.ok().body(reviewsFlux, Review.class);
+        }
+
         var reviewsFlux = reviewReactiveRepository.findAll();
         return ServerResponse.ok().body(reviewsFlux, Review.class);
     }
@@ -42,9 +50,9 @@ public class ReviewHandler {
         var existingReview  = reviewReactiveRepository.findById(reviewId);
 
         /**
-         * Converting the existing fetched review using flatmap to Review type
-         * Map requested values to existing review using map and return
-         * Use flatmap again to save the updated review and send response as response with success
+         * Converting the existing fetched review to Review type using flatmap.
+         * Map requested values to existing review using map and then return teh unsaved review.
+         * Use flatmap again to save the updated review and send it back with 200 response
          * **/
         return existingReview
                 .flatMap(review -> serverRequest.bodyToMono(Review.class)
@@ -55,5 +63,13 @@ public class ReviewHandler {
                         })
                         .flatMap(reviewReactiveRepository::save)
                         .flatMap(savedReview -> ServerResponse.ok().bodyValue(savedReview)));
+    }
+
+    public Mono<ServerResponse> deleteReviews(ServerRequest serverRequest) {
+        var reviewId = serverRequest.pathVariable("id");
+        var existingReview  = reviewReactiveRepository.findById(reviewId);
+        return existingReview
+                .flatMap(review -> reviewReactiveRepository.deleteById(reviewId)
+                        .then(ServerResponse.noContent().build()));
     }
 }
