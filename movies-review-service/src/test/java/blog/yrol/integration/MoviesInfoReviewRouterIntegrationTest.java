@@ -78,11 +78,11 @@ public class MoviesInfoReviewRouterIntegrationTest {
         // Assert & act
         webTestClient
                 .get()
-                .uri(REVIEWS_URL + "?movieInfoId=1")
+                .uri(REVIEWS_URL)
                 .exchange()
                 .expectStatus().is2xxSuccessful()
                 .expectBodyList(Review.class)
-                .hasSize(2);
+                .hasSize(3);
     }
 
     @Test
@@ -92,11 +92,11 @@ public class MoviesInfoReviewRouterIntegrationTest {
         // Assert & act
         webTestClient
                 .get()
-                .uri(REVIEWS_URL)
+                .uri(REVIEWS_URL + "?movieInfoId=1")
                 .exchange()
                 .expectStatus().is2xxSuccessful()
                 .expectBodyList(Review.class)
-                .hasSize(3);
+                .hasSize(2);
     }
 
     @Test

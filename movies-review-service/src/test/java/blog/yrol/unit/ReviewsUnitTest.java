@@ -13,8 +13,12 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import static org.mockito.ArgumentMatchers.any;
+
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.isA;
@@ -23,7 +27,8 @@ import static org.mockito.Mockito.when;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @WebFluxTest
-@ContextConfiguration(classes = {ReviewRouter.class, ReviewHandler.class}) // used for injecting required beans (dependencies)
+// using ContextConfiguration for injecting Router and Handler beans (dependencies) instead of controller (as in MoviesInfoControllerUnitTest) since no controllers are involved
+@ContextConfiguration(classes = {ReviewRouter.class, ReviewHandler.class})
 @AutoConfigureWebTestClient
 public class ReviewsUnitTest {
 
@@ -84,5 +89,68 @@ public class ReviewsUnitTest {
                     assert updatedReview != null;
                     assertEquals(updateMovieComment, updatedReview.getComment());
                 });
+    }
+
+    @Test
+    void testGetReviews_whenMovieInfoIdProvided_returnAllMatchingReviews() {
+
+        var reviews = List.of(
+                new Review("abc", 1L, "Awesome movie", 9.0),
+                new Review("def", 1L, "Fun to watch", 9.0)
+        );
+
+        // Arrange
+        when(reviewReactiveRepository.findReviewsByMovieInfoId((Long) any()))
+                .thenReturn(Flux.fromIterable(reviews));
+
+        // Act & Assert
+        webTestClient
+                .get()
+                .uri(REVIEWS_URL + "?movieInfoId=1")
+                .exchange()
+                .expectStatus().is2xxSuccessful()
+                .expectBodyList(Review.class)
+                .hasSize(2);
+    }
+
+    @Test
+    void testGetReviews_whenRequestingForAllAvailableReviews_returnAllReviews() {
+        var reviews = List.of(
+                new Review(null, 1L, "Awesome movie", 9.0),
+                new Review(null, 1L, "Fun to watch", 9.0)
+        );
+
+        // Arrange
+        when(reviewReactiveRepository.findAll())
+                .thenReturn(Flux.fromIterable(reviews));
+
+        // Act & Assert
+        webTestClient
+                .get()
+                .uri(REVIEWS_URL)
+                .exchange()
+                .expectStatus().is2xxSuccessful()
+                .expectBodyList(Review.class)
+                .hasSize(2);
+    }
+
+    @Test
+    void testDeleteReview_whenReviewIdProvided_deleteAndReturnNoContent() {
+
+        // Arrange
+
+        // Mocking "reviewReactiveRepository::findById" of updateReview()
+        when(reviewReactiveRepository.findById((String) any()))
+                .thenReturn(Mono.just(new Review("abc", 1L, "Awesome Movie", 9.0)));
+
+        when(reviewReactiveRepository.deleteById((String) any()))
+                .thenReturn(Mono.empty());
+
+        // Act & Assert
+        webTestClient
+                .delete()
+                .uri(REVIEWS_URL + "/abc")
+                .exchange()
+                .expectStatus().isNoContent();
     }
 }
