@@ -2,6 +2,7 @@ package blog.yrol.handler;
 
 import blog.yrol.domain.Review;
 import blog.yrol.exception.ReviewDataException;
+import blog.yrol.exception.ReviewNotFoundException;
 import blog.yrol.repository.ReviewReactiveRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,7 +61,8 @@ public class ReviewHandler {
 
         // Getting the review ID
         var reviewId = serverRequest.pathVariable("id");
-        var existingReview  = reviewReactiveRepository.findById(reviewId);
+        var existingReview  = reviewReactiveRepository.findById(reviewId)
+                .switchIfEmpty(Mono.error(new ReviewNotFoundException("Review not found for the given ID " + reviewId)));
 
         /**
          * Converting the existing fetched review to Review type using flatmap.

@@ -2,6 +2,7 @@ package blog.yrol.unit;
 
 
 import blog.yrol.domain.Review;
+import blog.yrol.exception.ReviewNotFoundException;
 import blog.yrol.exceptionhandler.GlobalErrorHandler;
 import blog.yrol.handler.ReviewHandler;
 import blog.yrol.repository.ReviewReactiveRepository;
@@ -67,7 +68,7 @@ public class ReviewsUnitTest {
     }
 
     @Test
-    void testAddReview_whenInvalidInputProvided_returnBadRequestWithErrors() {
+    void testAddReview_whenInvalidInputProvided_returnBadRequestWithErrorMessages() {
 
         // Arrange
         var review = new Review(null, null, "Awesome movie", -2.0);
@@ -103,7 +104,7 @@ public class ReviewsUnitTest {
         webTestClient
                 .put()
                 .uri(REVIEWS_URL + "/abc")
-                .bodyValue(new Review("abc", 1L, updateMovieComment, 9.0))
+                .bodyValue(new Review(null, 1L, updateMovieComment, 9.0))
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(Review.class)
@@ -115,7 +116,7 @@ public class ReviewsUnitTest {
     }
 
     @Test
-    void testUpdateMovie_whenInvalidInputDataProvided_returnBadRequestWithErrors() {
+    void testUpdateMovie_whenInvalidInputDataProvided_returnBadRequestResponseWithErrorMessage() {
         // Arrange
         String updateMovieComment = "Awesome movie update";
 
@@ -124,16 +125,40 @@ public class ReviewsUnitTest {
 
         // Mocking "reviewReactiveRepository::save" of updateReview()
         when(reviewReactiveRepository.save(isA(Review.class)))
-                .thenReturn(Mono.just(new Review("abc", 1L, updateMovieComment, 9.0)));
+                .thenReturn(Mono.just(new Review(null, 1L, updateMovieComment, 9.0)));
 
         webTestClient
                 .put()
                 .uri(REVIEWS_URL + "/abc")
-                .bodyValue(new Review("abc", 1L, updateMovieComment, -5.0))
+                .bodyValue(new Review(null, 1L, updateMovieComment, -5.0))
                 .exchange()
                 .expectStatus().isBadRequest()
                 .expectBody(String.class)
                 .isEqualTo("rating.negative : please pass a non-negative value");
+    }
+
+    @Test
+    void testUpdateMovie_whenInvalidIdProvided_returnNotFoundResponseWithErrorMessage() {
+        // Arrange
+        String updateMovieComment = "Awesome movie update";
+        String reviewId = "def";
+        String errorMessage = "Review not found for the given ID " + reviewId;
+
+        // Mocking "reviewReactiveRepository::findById" of updateReview() - throwing ReviewNotFoundException scenario when update review not found
+        when(reviewReactiveRepository.findById((String) any())).thenReturn(Mono.error(new ReviewNotFoundException(errorMessage)));
+
+        // Mocking "reviewReactiveRepository::save" of updateReview()
+        when(reviewReactiveRepository.save(isA(Review.class)))
+                .thenReturn(Mono.just(new Review(null, 1L, updateMovieComment, 9.0)));
+
+        webTestClient
+                .put()
+                .uri(REVIEWS_URL + "/" + reviewId)
+                .bodyValue(new Review(null, 1L, updateMovieComment, 5.0))
+                .exchange()
+                .expectStatus().isNotFound()
+                .expectBody(String.class)
+                .isEqualTo(errorMessage);
     }
 
     @Test
