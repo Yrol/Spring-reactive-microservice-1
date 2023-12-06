@@ -2,6 +2,7 @@ package blog.yrol.unit;
 
 
 import blog.yrol.domain.Review;
+import blog.yrol.exceptionhandler.GlobalErrorHandler;
 import blog.yrol.handler.ReviewHandler;
 import blog.yrol.repository.ReviewReactiveRepository;
 import blog.yrol.router.ReviewRouter;
@@ -28,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @WebFluxTest
 // using ContextConfiguration for injecting Router and Handler beans (dependencies) instead of controller (as in MoviesInfoControllerUnitTest) since no controllers are involved
-@ContextConfiguration(classes = {ReviewRouter.class, ReviewHandler.class})
+@ContextConfiguration(classes = {ReviewRouter.class, ReviewHandler.class, GlobalErrorHandler.class})
 @AutoConfigureWebTestClient
 public class ReviewsUnitTest {
 
@@ -66,6 +67,28 @@ public class ReviewsUnitTest {
     }
 
     @Test
+    void testAddReview_whenInvalidInputProvided_returnBadRequestWithErrors() {
+
+        // Arrange
+        var review = new Review(null, null, "Awesome movie", -2.0);
+
+        // Mocking "reviewReactiveRepository::save" of addReview()
+        when(reviewReactiveRepository.save(isA(Review.class)))
+                .thenReturn(Mono.just(new Review("abc", 1L, "Awesome movie", 9.0)));
+
+        // Assert & Act
+        webTestClient
+                .post()
+                .uri(REVIEWS_URL)
+                .bodyValue(review)
+                .exchange()
+                .expectStatus()
+                .isBadRequest()
+                .expectBody(String.class)
+                .isEqualTo("rating.movieInfoId : must not be null,rating.negative : please pass a non-negative value");
+    }
+
+    @Test
     void testUpdateMovie_whenValidInputDataProvided_updateReview() {
         // Arrange
         String updateMovieComment = "Awesome movie update";
@@ -89,6 +112,28 @@ public class ReviewsUnitTest {
                     assert updatedReview != null;
                     assertEquals(updateMovieComment, updatedReview.getComment());
                 });
+    }
+
+    @Test
+    void testUpdateMovie_whenInvalidInputDataProvided_returnBadRequestWithErrors() {
+        // Arrange
+        String updateMovieComment = "Awesome movie update";
+
+        // Mocking "reviewReactiveRepository::findById" of updateReview()
+        when(reviewReactiveRepository.findById((String) any())).thenReturn(Mono.just(new Review("abc", 1L, "Awesome Movie", 9.0)));
+
+        // Mocking "reviewReactiveRepository::save" of updateReview()
+        when(reviewReactiveRepository.save(isA(Review.class)))
+                .thenReturn(Mono.just(new Review("abc", 1L, updateMovieComment, 9.0)));
+
+        webTestClient
+                .put()
+                .uri(REVIEWS_URL + "/abc")
+                .bodyValue(new Review("abc", 1L, updateMovieComment, -5.0))
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody(String.class)
+                .isEqualTo("rating.negative : please pass a non-negative value");
     }
 
     @Test
