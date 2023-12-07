@@ -29,7 +29,7 @@ import static org.mockito.Mockito.when;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @WebFluxTest
-// using ContextConfiguration for injecting Router and Handler beans (dependencies) instead of controller (as in MoviesInfoControllerUnitTest) since no controllers are involved
+// using ContextConfiguration for injecting dependencies such as Router, Handler & etc beans instead of controller (as in MoviesInfoControllerUnitTest) since no controllers are involved
 @ContextConfiguration(classes = {ReviewRouter.class, ReviewHandler.class, GlobalErrorHandler.class})
 @AutoConfigureWebTestClient
 public class ReviewsUnitTest {
@@ -181,6 +181,25 @@ public class ReviewsUnitTest {
                 .expectStatus().is2xxSuccessful()
                 .expectBodyList(Review.class)
                 .hasSize(2);
+    }
+
+    @Test
+    void testGetReviews_whenInvalidMovieInfoIdProvided_returnAllMatchingReviews() {
+
+        String movieInfoId = "1";
+
+        // Arrange
+        when(reviewReactiveRepository.findReviewsByMovieInfoId((Long) any()))
+                .thenReturn(Flux.error(new ReviewNotFoundException("Review not found for the given ID " + movieInfoId)));
+
+
+        // Act & Assert
+        webTestClient
+                .get()
+                .uri(REVIEWS_URL + "?movieInfoId=" + movieInfoId)
+                .exchange()
+                .expectStatus().isNotFound()
+                .expectBodyList(String.class);
     }
 
     @Test

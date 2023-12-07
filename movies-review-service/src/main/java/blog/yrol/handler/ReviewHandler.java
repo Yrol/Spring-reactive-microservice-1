@@ -49,7 +49,8 @@ public class ReviewHandler {
         var movieInfoId = request.queryParam("movieInfoId");
 
         if(movieInfoId.isPresent()) {
-            var reviewsFlux = reviewReactiveRepository.findReviewsByMovieInfoId(Long.valueOf(movieInfoId.get()));
+            var reviewsFlux = reviewReactiveRepository.findReviewsByMovieInfoId(Long.valueOf(movieInfoId.get()))
+                    .switchIfEmpty(Mono.error(new ReviewNotFoundException("Review not found for the given ID " + movieInfoId.get())));
             return ServerResponse.ok().body(reviewsFlux, Review.class);
         }
 
