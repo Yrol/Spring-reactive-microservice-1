@@ -6,6 +6,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+/**
+ * Custom WebClient config for consuming moviesInfo service endpoints
+ * **/
 @Component
 public class MoviesInfoRestClient {
 
