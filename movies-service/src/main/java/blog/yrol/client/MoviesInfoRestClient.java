@@ -14,7 +14,7 @@ public class MoviesInfoRestClient {
 
     private WebClient webClient;
 
-    @Value("${rest-client.moviesInfoUrl}")
+    @Value("${rest.client.moviesInfoUrl}")
     private String moviesInfoUrl;
 
     public MoviesInfoRestClient(WebClient webClient) {

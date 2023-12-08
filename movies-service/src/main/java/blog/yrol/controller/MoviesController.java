@@ -1,5 +1,7 @@
 package blog.yrol.controller;
 
+import blog.yrol.client.MoviesInfoRestClient;
+import blog.yrol.client.ReviewsRestClient;
 import blog.yrol.domain.Movie;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,9 +23,30 @@ public class MoviesController {
     @Autowired
     private WebClient webClient;
 
+    private MoviesInfoRestClient moviesInfoRestClient;
+    private ReviewsRestClient reviewsRestClient;
+
+    public MoviesController(MoviesInfoRestClient moviesInfoRestClient, ReviewsRestClient reviewsRestClient) {
+        this.moviesInfoRestClient = moviesInfoRestClient;
+        this.reviewsRestClient = reviewsRestClient;
+    }
+
     @GetMapping("/{id}")
     public Mono<Movie> retrieveMovieById(@PathVariable("id") String movieId) {
-        return null;
+
+        /**
+         * Fetch movies and reviews
+         * Calling moviesInfoRestClient.retrieveMovieInfo and reviewsRestClient.retrieveReviews (only if retrieveMovieInfo exist) in order
+         * Using flatMap to convert reactive type Mono returned by retrieveMovieInfo.
+         * Using collectList to convert reactive type Flux to a List (since Movie -> reviewList is a type List)
+         * **/
+        return moviesInfoRestClient.retrieveMovieInfo(movieId)
+                .flatMap(movieInfo -> {
+                  var reviewListMono = reviewsRestClient.retrieveReviews(movieId)
+                          .collectList();
+
+                    return reviewListMono.map(reviews -> new Movie(movieInfo, reviews));
+                });
     }
 
 }
