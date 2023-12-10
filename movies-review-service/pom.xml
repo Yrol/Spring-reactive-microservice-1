@@ -52,12 +52,6 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>blog.yrol</groupId>
-            <artifactId>reactive-programming-using-reactor</artifactId>
-            <version>1.0-SNAPSHOT</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <scope>test</scope>
