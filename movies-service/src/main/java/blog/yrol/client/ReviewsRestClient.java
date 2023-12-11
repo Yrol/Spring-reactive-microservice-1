@@ -32,7 +32,7 @@ public class ReviewsRestClient {
 
         /**
          * Constructing the Url using UriComponentsBuilder/
-         * Ex: http://localhost:8888/v1/reviews/1
+         * Ex: http://localhost:8888/v1/reviews?movieInfoId=2
          * **/
         var url = UriComponentsBuilder.fromHttpUrl(reviewsUrl)
                 .queryParam("movieInfoId", movieId)
@@ -43,7 +43,7 @@ public class ReviewsRestClient {
                 .uri(url)
                 .retrieve()
                 // Handling 4xx errors (only if returned / emitted by the moviesInfo service)
-                .onStatus(HttpStatus::is4xxClientError, clientResponse -> {
+                .onStatus(HttpStatus::is4xxClientError, (clientResponse -> {
 
                     // Handling 404 (if reviews not found for a given movie then return empty since its valid -  where a movie may not consist of any reviews)
                     if (clientResponse.statusCode().equals(HttpStatus.NOT_FOUND)) {
@@ -54,17 +54,17 @@ public class ReviewsRestClient {
                     return clientResponse.bodyToMono(String.class)
                             .flatMap(responseMessage -> Mono.error(new ReviewsClientException(
                                     responseMessage)));
-                })
+                }))
 
                 // Handling 5xx errors (only if returned / emitted by the moviesInfo service)
-                .onStatus(HttpStatus::is5xxServerError, clientResponse -> {
+                .onStatus(HttpStatus::is5xxServerError, (clientResponse -> {
 
                     // Handling default 4xx errors
                     return clientResponse.bodyToMono(String.class)
                             .flatMap(responseMessage -> Mono.error(new ReviewsClientException(
                                     "Server Exception in MoviesReviewService: " + responseMessage
                             )));
-                })
+                }))
                 .bodyToFlux(Review.class);
     }
 }

@@ -50,7 +50,7 @@ public class ReviewHandler {
 
         if(movieInfoId.isPresent()) {
             var reviewsFlux = reviewReactiveRepository.findReviewsByMovieInfoId(Long.valueOf(movieInfoId.get()))
-                    .switchIfEmpty(Mono.error(new ReviewNotFoundException("Review not found for the given ID " + movieInfoId.get())));
+                    .switchIfEmpty(Mono.empty());
             return ServerResponse.ok().body(reviewsFlux, Review.class);
         }
 

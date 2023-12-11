@@ -190,7 +190,7 @@ public class ReviewsUnitTest {
 
         // Arrange
         when(reviewReactiveRepository.findReviewsByMovieInfoId((Long) any()))
-                .thenReturn(Flux.error(new ReviewNotFoundException("Review not found for the given ID " + movieInfoId)));
+                .thenReturn(Flux.empty());
 
 
         // Act & Assert
@@ -198,7 +198,7 @@ public class ReviewsUnitTest {
                 .get()
                 .uri(REVIEWS_URL + "?movieInfoId=" + movieInfoId)
                 .exchange()
-                .expectStatus().isNotFound()
+                .expectStatus().isOk()
                 .expectBodyList(String.class);
     }
 
