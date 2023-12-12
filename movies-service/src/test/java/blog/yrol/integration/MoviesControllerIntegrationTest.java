@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.client.AutoConfigureWebClient;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock;
+import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.reactive.server.WebTestClient;
@@ -41,7 +42,7 @@ public class MoviesControllerIntegrationTest {
     }
 
     @Test
-    void retrieveMovieById() {
+    void testRetrieveMovieById_whenValidMovieIdProvided_returnMovieAndReviews() {
 
         var movieId = "abc";
 
@@ -52,6 +53,7 @@ public class MoviesControllerIntegrationTest {
                         .withBodyFile("moviesinfo.json")));
 
 
+        // Creating GET stub for fetching a reviews by movieId (in ReviewHandler -> getReviews)
         stubFor(get(urlEqualTo("/v1/reviews?movieInfoId=" + movieId))
 //                .withQueryParam("movieInfoId", equalTo(movieId))
                 .willReturn(aResponse()
@@ -69,5 +71,98 @@ public class MoviesControllerIntegrationTest {
                     assert Objects.requireNonNull(movie).getReviewList().size() == 2;
                     assertEquals("Batman Begins", movie.getMovieInfo().getName());
                 });
+    }
+
+
+    @Test
+    void testRetrieveMovieById_whenInvalidMovieIdProvided_return404Response_method_1() {
+        var movieId = "abc";
+        var invalidMovieId = "def";
+
+        // Creating GET stub for fetching a movie by Id (in MoviesInfoRestClient)
+        stubFor(get(urlEqualTo("/v1/moviesinfo/" + movieId))
+                .willReturn(aResponse()
+                        .withHeader("Content-Type", "application/json")
+                        .withBodyFile("moviesinfo.json")));
+
+        webTestClient
+                .get()
+                .uri("/v1/movies/{id}", invalidMovieId)
+                .exchange()
+                .expectStatus().isNotFound()
+                .expectBody(String.class)
+                .isEqualTo("No such movie exist for the ID: " + invalidMovieId);
+    }
+
+    @Test
+    void testRetrieveMovieById_whenInvalidMovieIdProvided_return404Response_method_2() {
+        var movieId = "abc";
+
+        // Creating GET stub for fetching a movie by Id (in MoviesInfoRestClient)
+        stubFor(get(urlEqualTo("/v1/moviesinfo/" + movieId))
+                .willReturn(aResponse()
+                        .withStatus(404)));
+
+        webTestClient
+                .get()
+                .uri("/v1/movies/{id}", movieId)
+                .exchange()
+                .expectStatus().isNotFound()
+                .expectBody(String.class)
+                .isEqualTo("No such movie exist for the ID: " + movieId);
+    }
+
+    /**
+     * Testing a valid movie which consist of  no reviews /  when reviews throw 404 when movieId provided
+     * **/
+    @Test
+    void testRetrieveMovieById_whenValidMovieIdProvidedAndNoReviewsExist_returnMovieWithNoReviews() {
+        var movieId = "abc";
+
+        // Creating GET stub for fetching a movie by Id (in MoviesInfoRestClient)
+        stubFor(get(urlEqualTo("/v1/moviesinfo/" + movieId))
+                .willReturn(aResponse()
+                        .withHeader("Content-Type", "application/json")
+                        .withBodyFile("moviesinfo.json")));
+
+
+        /**
+         * Creating GET stub for fetching a reviews by movieId (in ReviewHandler -> getReviews)
+         * Simulating: "if (clientResponse.statusCode().equals(HttpStatus.NOT_FOUND))" in ReviewsRestClient.java
+         * **/
+        stubFor(get(urlEqualTo("/v1/reviews?movieInfoId=" + movieId))
+//                .withQueryParam("movieInfoId", equalTo(movieId))
+                .willReturn(aResponse()
+                        .withStatus(404)));
+
+
+        webTestClient
+                .get()
+                .uri("/v1/movies/{id}", movieId)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(Movie.class)
+                .consumeWith(movieEntityExchangeResult -> {
+                    var movie = movieEntityExchangeResult.getResponseBody();
+                    assert Objects.requireNonNull(movie).getReviewList().isEmpty();
+                    assertEquals("Batman Begins", movie.getMovieInfo().getName());
+                });
+    }
+
+    @Test
+    void testRetrieveMovieById_whenMoviesServiceIsDown500_returnMovieWithNoReviews() {
+
+        var movieId = "abc";
+
+        // Creating GET stub for fetching a movie by Id (in MoviesInfoRestClient)
+        stubFor(get(urlEqualTo("/v1/moviesinfo/" + movieId))
+                .willReturn(aResponse()
+                        .withStatus(500)));
+
+        webTestClient
+                .get()
+                .uri("/v1/movies/{id}", movieId)
+                .exchange()
+                .expectStatus().is5xxServerError();
     }
 }

@@ -2,6 +2,7 @@ package blog.yrol.client;
 
 import blog.yrol.domain.MovieInfo;
 import blog.yrol.exception.MoviesInfoClientException;
+import blog.yrol.exception.MoviesInfoServerException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -33,7 +34,7 @@ public class MoviesInfoRestClient {
                 .retrieve()
 
                 // Handling 4xx errors (only if returned / emitted by the moviesInfo service)
-                .onStatus(HttpStatus::is4xxClientError, clientResponse -> {
+                .onStatus(HttpStatus::is4xxClientError, (clientResponse -> {
 
                     // Handling 404
                     if (clientResponse.statusCode().equals(HttpStatus.NOT_FOUND)) {
@@ -47,17 +48,24 @@ public class MoviesInfoRestClient {
                             .flatMap(responseMessage -> Mono.error(new MoviesInfoClientException(
                                 responseMessage, clientResponse.statusCode().value()
                             )));
-                })
+                }))
 
                 // Handling 5xx errors (only if returned / emitted by the moviesInfo service)
-                .onStatus(HttpStatus::is5xxServerError, clientResponse -> {
+                .onStatus(HttpStatus::is5xxServerError, (clientResponse -> {
+                    log.info("Movies Info Rest status code: {}", clientResponse.statusCode().value());
 
-                    // Handling default 4xx errors
-                    return clientResponse.bodyToMono(String.class)
-                            .flatMap(responseMessage -> Mono.error(new MoviesInfoClientException(
-                                    "Server Exception in MoviesInfoService: " + responseMessage, clientResponse.statusCode().value()
-                            )));
-                })
+                    // Handling default 5xx errors
+//                    return clientResponse.bodyToMono(String.class)
+//                            .flatMap(responseMessage -> Mono.error(new MoviesInfoServerException(
+//                                    "Server Exception in MoviesInfoService: {}" + responseMessage
+//                            )));
+
+
+
+                    return Mono.error(new MoviesInfoServerException(
+                            "Server Exception in MoviesInfoService: {}"
+                    ));
+                }))
                 .bodyToMono(MovieInfo.class)
                 .log();
     }
