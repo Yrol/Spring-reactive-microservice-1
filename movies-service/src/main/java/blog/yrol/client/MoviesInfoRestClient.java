@@ -50,21 +50,28 @@ public class MoviesInfoRestClient {
                             )));
                 }))
 
+
                 // Handling 5xx errors (only if returned / emitted by the moviesInfo service)
                 .onStatus(HttpStatus::is5xxServerError, (clientResponse -> {
                     log.info("Movies Info Rest status code: {}", clientResponse.statusCode().value());
 
+//                    var errorResponse = clientResponse.body((clientHttpResponse, context) -> {
+//                        return clientHttpResponse.getBody();
+//                    });
+//
+//                    return Mono.error(new MoviesInfoServerException(
+//                            "Server Exception in MoviesInfoService:" + errorResponse
+//                    ));
+
+
+                    var errorReason = clientResponse.statusCode().getReasonPhrase();
+
                     // Handling default 5xx errors
-//                    return clientResponse.bodyToMono(String.class)
-//                            .flatMap(responseMessage -> Mono.error(new MoviesInfoServerException(
-//                                    "Server Exception in MoviesInfoService: {}" + responseMessage
-//                            )));
+                    return clientResponse.bodyToMono(String.class)
+                            .flatMap(responseMessage -> Mono.error(new MoviesInfoServerException(
+                                    "Server Exception in MoviesInfoService: " + errorReason + ". "+ responseMessage
+                            )));
 
-
-
-                    return Mono.error(new MoviesInfoServerException(
-                            "Server Exception in MoviesInfoService: {}"
-                    ));
                 }))
                 .bodyToMono(MovieInfo.class)
                 .log();

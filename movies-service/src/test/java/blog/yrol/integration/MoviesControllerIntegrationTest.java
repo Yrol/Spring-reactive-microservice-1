@@ -157,6 +157,7 @@ public class MoviesControllerIntegrationTest {
         // Creating GET stub for fetching a movie by Id (in MoviesInfoRestClient)
         stubFor(get(urlEqualTo("/v1/moviesinfo/" + movieId))
                 .willReturn(aResponse()
+                        .withBody("Server down")
                         .withStatus(500)));
 
         webTestClient
