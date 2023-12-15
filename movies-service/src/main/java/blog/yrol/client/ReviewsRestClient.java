@@ -1,12 +1,15 @@
 package blog.yrol.client;
 
 import blog.yrol.domain.Review;
+import blog.yrol.exception.MoviesInfoServerException;
 import blog.yrol.exception.ReviewsClientException;
+import blog.yrol.exception.ReviewsServerException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientRequestException;
 import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -61,10 +64,12 @@ public class ReviewsRestClient {
 
                     // Handling default 4xx errors
                     return clientResponse.bodyToMono(String.class)
-                            .flatMap(responseMessage -> Mono.error(new ReviewsClientException(
-                                    "Server Exception in MoviesReviewService: " + responseMessage
+                            .flatMap(responseMessage -> Mono.error(new ReviewsServerException(
+                                    String.format("Server Exception in MoviesReviewService: %s", responseMessage)
                             )));
                 }))
-                .bodyToFlux(Review.class);
+                .bodyToFlux(Review.class)
+                .onErrorMap(WebClientRequestException.class, ex -> new ReviewsServerException(String.format("Web Client exception MoviesReviewService: %s", ex.getMessage())))
+                .log();
     }
 }

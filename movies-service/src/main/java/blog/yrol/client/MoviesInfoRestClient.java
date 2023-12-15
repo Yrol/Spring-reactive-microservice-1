@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientRequestException;
 import reactor.core.publisher.Mono;
 
 /**
@@ -36,15 +37,18 @@ public class MoviesInfoRestClient {
                 // Handling 4xx errors (only if returned / emitted by the moviesInfo service)
                 .onStatus(HttpStatus::is4xxClientError, (clientResponse -> {
 
+                    var errorReason = clientResponse.statusCode().getReasonPhrase();
+
                     // Handling 404
                     if (clientResponse.statusCode().equals(HttpStatus.NOT_FOUND)) {
                         return Mono.error(new MoviesInfoClientException(
-                           "No such movie exist for the ID: " + movieId, clientResponse.statusCode().value()
+                           String.format("No such movie exist for the ID: %s", movieId), clientResponse.statusCode().value()
                         ));
                     }
 
                     // Handling default 4xx errors
                     return clientResponse.bodyToMono(String.class)
+                            .switchIfEmpty(Mono.error(new MoviesInfoClientException(String.format("Server Exception in MoviesInfoService: %s", errorReason), clientResponse.statusCode().value())))
                             .flatMap(responseMessage -> Mono.error(new MoviesInfoClientException(
                                 responseMessage, clientResponse.statusCode().value()
                             )));
@@ -55,25 +59,21 @@ public class MoviesInfoRestClient {
                 .onStatus(HttpStatus::is5xxServerError, (clientResponse -> {
                     log.info("Movies Info Rest status code: {}", clientResponse.statusCode().value());
 
-//                    var errorResponse = clientResponse.body((clientHttpResponse, context) -> {
-//                        return clientHttpResponse.getBody();
-//                    });
-//
-//                    return Mono.error(new MoviesInfoServerException(
-//                            "Server Exception in MoviesInfoService:" + errorResponse
-//                    ));
-
 
                     var errorReason = clientResponse.statusCode().getReasonPhrase();
 
+
                     // Handling default 5xx errors
                     return clientResponse.bodyToMono(String.class)
+                            .switchIfEmpty(Mono.error(new MoviesInfoServerException(String.format("Server Exception in MoviesInfoService: %s", errorReason))))
                             .flatMap(responseMessage -> Mono.error(new MoviesInfoServerException(
-                                    "Server Exception in MoviesInfoService: " + errorReason + ". "+ responseMessage
+                                    String.format("Server Exception in MoviesInfoService: %s", responseMessage)
+
                             )));
 
                 }))
                 .bodyToMono(MovieInfo.class)
+                .onErrorMap(WebClientRequestException.class, ex -> new MoviesInfoServerException(String.format("Web Client exception MovieInfoService: %s", ex.getMessage())))
                 .log();
     }
 }

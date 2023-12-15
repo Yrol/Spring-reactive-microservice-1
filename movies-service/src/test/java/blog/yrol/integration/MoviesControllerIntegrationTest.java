@@ -9,7 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.client.AutoConfigureWebClient;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock;
-import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.reactive.server.WebTestClient;
@@ -150,9 +149,27 @@ public class MoviesControllerIntegrationTest {
     }
 
     @Test
-    void testRetrieveMovieById_whenMoviesServiceIsDown500_returnMovieWithNoReviews() {
+    void testRetrieveMovieById_whenMovieServiceReturns400_returnErrorWithMessage() {
+        var movieId = "abc";
+
+        // Creating GET stub for fetching a movie by Id (in MoviesInfoRestClient)
+        stubFor(get(urlEqualTo("/v1/moviesinfo/" + movieId))
+                .willReturn(aResponse()
+                        .withStatus(400)));
+
+        webTestClient
+                .get()
+                .uri("/v1/movies/{id}", movieId)
+                .exchange()
+                .expectStatus().is4xxClientError()
+                .expectBody(String.class);
+    }
+
+    @Test
+    void testRetrieveMovieById_whenMoviesServiceIsDown500_returnErrorWithMessage() {
 
         var movieId = "abc";
+        var errorMessage = "Server down";
 
         // Creating GET stub for fetching a movie by Id (in MoviesInfoRestClient)
         stubFor(get(urlEqualTo("/v1/moviesinfo/" + movieId))
@@ -164,6 +181,8 @@ public class MoviesControllerIntegrationTest {
                 .get()
                 .uri("/v1/movies/{id}", movieId)
                 .exchange()
-                .expectStatus().is5xxServerError();
+                .expectStatus().is5xxServerError()
+                .expectBody(String.class)
+                .isEqualTo(String.format("Server Exception in MoviesInfoService: %s", errorMessage));
     }
 }
