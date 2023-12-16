@@ -1,6 +1,7 @@
 package blog.yrol.client;
 
 import blog.yrol.domain.Review;
+import blog.yrol.exception.MoviesInfoClientException;
 import blog.yrol.exception.MoviesInfoServerException;
 import blog.yrol.exception.ReviewsClientException;
 import blog.yrol.exception.ReviewsServerException;
@@ -48,6 +49,8 @@ public class ReviewsRestClient {
                 // Handling 4xx errors (only if returned / emitted by the moviesInfo service)
                 .onStatus(HttpStatus::is4xxClientError, (clientResponse -> {
 
+                    var errorReason = clientResponse.statusCode().getReasonPhrase();
+
                     // Handling 404 (if reviews not found for a given movie then return empty since its valid -  where a movie may not consist of any reviews)
                     if (clientResponse.statusCode().equals(HttpStatus.NOT_FOUND)) {
                         return Mono.empty();
@@ -55,15 +58,19 @@ public class ReviewsRestClient {
 
                     // Handling default 4xx errors
                     return clientResponse.bodyToMono(String.class)
+                            .switchIfEmpty(Mono.error(new ReviewsClientException(String.format("Server Exception in MoviesReviewService: %s", errorReason), clientResponse.statusCode().value())))
                             .flatMap(responseMessage -> Mono.error(new ReviewsClientException(
-                                    responseMessage)));
+                                    responseMessage, clientResponse.statusCode().value())));
                 }))
 
                 // Handling 5xx errors (only if returned / emitted by the moviesInfo service)
                 .onStatus(HttpStatus::is5xxServerError, (clientResponse -> {
 
-                    // Handling default 4xx errors
+                    var errorReason = clientResponse.statusCode().getReasonPhrase();
+
+                    // Handling default 5xx errors
                     return clientResponse.bodyToMono(String.class)
+                            .switchIfEmpty(Mono.error(new ReviewsServerException(String.format("Server Exception in MoviesReviewService: %s", errorReason))))
                             .flatMap(responseMessage -> Mono.error(new ReviewsServerException(
                                     String.format("Server Exception in MoviesReviewService: %s", responseMessage)
                             )));

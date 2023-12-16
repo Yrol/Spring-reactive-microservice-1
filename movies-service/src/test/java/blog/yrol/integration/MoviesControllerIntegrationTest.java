@@ -100,6 +100,7 @@ public class MoviesControllerIntegrationTest {
         // Creating GET stub for fetching a movie by Id (in MoviesInfoRestClient)
         stubFor(get(urlEqualTo("/v1/moviesinfo/" + movieId))
                 .willReturn(aResponse()
+                        .withHeader("Content-Type", "application/json")
                         .withStatus(404)));
 
         webTestClient
@@ -132,6 +133,7 @@ public class MoviesControllerIntegrationTest {
         stubFor(get(urlEqualTo("/v1/reviews?movieInfoId=" + movieId))
 //                .withQueryParam("movieInfoId", equalTo(movieId))
                 .willReturn(aResponse()
+                        .withHeader("Content-Type", "application/json")
                         .withStatus(404)));
 
 
@@ -155,6 +157,7 @@ public class MoviesControllerIntegrationTest {
         // Creating GET stub for fetching a movie by Id (in MoviesInfoRestClient)
         stubFor(get(urlEqualTo("/v1/moviesinfo/" + movieId))
                 .willReturn(aResponse()
+                        .withHeader("Content-Type", "application/json")
                         .withStatus(400)));
 
         webTestClient
@@ -174,6 +177,7 @@ public class MoviesControllerIntegrationTest {
         // Creating GET stub for fetching a movie by Id (in MoviesInfoRestClient)
         stubFor(get(urlEqualTo("/v1/moviesinfo/" + movieId))
                 .willReturn(aResponse()
+                        .withHeader("Content-Type", "application/json")
                         .withBody("Server down")
                         .withStatus(500)));
 
@@ -184,5 +188,35 @@ public class MoviesControllerIntegrationTest {
                 .expectStatus().is5xxServerError()
                 .expectBody(String.class)
                 .isEqualTo(String.format("Server Exception in MoviesInfoService: %s", errorMessage));
+    }
+
+
+    @Test
+    void testRetrieveMovieById_whenReviewsServiceIsDown500_returnErrorWithMessage() {
+        var movieId = "abc";
+        var errorMessage = "Server down";
+
+        // Creating GET stub for fetching a movie by Id (in MoviesInfoRestClient)
+        stubFor(get(urlEqualTo("/v1/moviesinfo/" + movieId))
+                .willReturn(aResponse()
+                        .withHeader("Content-Type", "application/json")
+                        .withBodyFile("moviesinfo.json")));
+
+
+        // Creating GET stub for fetching a reviews by movieId (in ReviewHandler -> getReviews)
+        stubFor(get(urlEqualTo("/v1/reviews?movieInfoId=" + movieId))
+//                .withQueryParam("movieInfoId", equalTo(movieId))
+                .willReturn(aResponse()
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("Server down")
+                        .withStatus(500)));
+
+        webTestClient
+                .get()
+                .uri("/v1/movies/{id}", movieId)
+                .exchange()
+                .expectStatus().is5xxServerError()
+                .expectBody(String.class)
+                .isEqualTo(String.format("Server Exception in MoviesReviewService: %s", errorMessage));
     }
 }
