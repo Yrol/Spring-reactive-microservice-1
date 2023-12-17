@@ -110,6 +110,9 @@ public class MoviesControllerIntegrationTest {
                 .expectStatus().isNotFound()
                 .expectBody(String.class)
                 .isEqualTo("No such movie exist for the ID: " + movieId);
+
+        // verify that the retry logic has NOT been triggered when 404 is thrown by the movie info service
+        WireMock.verify(1, getRequestedFor(urlEqualTo("/v1/moviesinfo/" + movieId)));
     }
 
     /**
@@ -148,6 +151,9 @@ public class MoviesControllerIntegrationTest {
                     assert Objects.requireNonNull(movie).getReviewList().isEmpty();
                     assertEquals("Batman Begins", movie.getMovieInfo().getName());
                 });
+
+        // verify that the retry logic has NOT been triggered when 404 is thrown by the review service
+        WireMock.verify(1, getRequestedFor(urlEqualTo("/v1/reviews?movieInfoId=" + movieId)));
     }
 
     @Test
@@ -188,6 +194,10 @@ public class MoviesControllerIntegrationTest {
                 .expectStatus().is5xxServerError()
                 .expectBody(String.class)
                 .isEqualTo(String.format("Server Exception in MoviesInfoService: %s", errorMessage));
+
+
+        // Verifying the retry mechanism - making sure it attempted 4 times
+        WireMock.verify(4, getRequestedFor(urlEqualTo("/v1/moviesinfo/" + movieId)));
     }
 
 
@@ -218,5 +228,9 @@ public class MoviesControllerIntegrationTest {
                 .expectStatus().is5xxServerError()
                 .expectBody(String.class)
                 .isEqualTo(String.format("Server Exception in MoviesReviewService: %s", errorMessage));
+
+
+        // Verifying the retry mechanism - making sure it attempted 4 times for the review service
+        WireMock.verify(4, getRequestedFor(urlEqualTo("/v1/reviews?movieInfoId=" + movieId)));
     }
 }

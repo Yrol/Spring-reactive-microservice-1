@@ -3,13 +3,18 @@ package blog.yrol.client;
 import blog.yrol.domain.MovieInfo;
 import blog.yrol.exception.MoviesInfoClientException;
 import blog.yrol.exception.MoviesInfoServerException;
+import blog.yrol.util.RetryUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientRequestException;
+import reactor.core.Exceptions;
 import reactor.core.publisher.Mono;
+import reactor.util.retry.Retry;
+
+import java.time.Duration;
 
 /**
  * Custom WebClient config for consuming moviesInfo service endpoints
@@ -29,6 +34,9 @@ public class MoviesInfoRestClient {
 
     public Mono<MovieInfo> retrieveMovieInfo(String movieId) {
         var url = moviesInfoUrl.concat("/{id}");
+
+
+
         return webClient
                 .get()
                 .uri(url, movieId)
@@ -74,6 +82,8 @@ public class MoviesInfoRestClient {
                 }))
                 .bodyToMono(MovieInfo.class)
                 .onErrorMap(WebClientRequestException.class, ex -> new MoviesInfoServerException(String.format("Web Client exception MovieInfoService: %s", ex.getMessage())))
+//                .retry(3)
+                .retryWhen(RetryUtil.retrySpec())
                 .log();
     }
 }

@@ -5,6 +5,7 @@ import blog.yrol.exception.MoviesInfoClientException;
 import blog.yrol.exception.MoviesInfoServerException;
 import blog.yrol.exception.ReviewsClientException;
 import blog.yrol.exception.ReviewsServerException;
+import blog.yrol.util.RetryUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -77,6 +78,7 @@ public class ReviewsRestClient {
                 }))
                 .bodyToFlux(Review.class)
                 .onErrorMap(WebClientRequestException.class, ex -> new ReviewsServerException(String.format("Web Client exception MoviesReviewService: %s", ex.getMessage())))
+                .retryWhen(RetryUtil.retrySpec())
                 .log();
     }
 }
