@@ -11,6 +11,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import reactor.test.StepVerifier;
 
 import java.util.List;
 
@@ -132,5 +133,42 @@ public class MoviesInfoReviewRouterIntegrationTest {
                 .uri(REVIEWS_URL + "/1")
                 .exchange()
                 .expectStatus().isNoContent();
+    }
+
+    @Test
+    void testGetReviewsStream_whenCallingTheApi_streamNewlyCreatedReviews() {
+        // Arrange
+        var review = new Review(null, 1L, "Awesome movie", 9.0);
+
+        webTestClient
+                .post()
+                .uri(REVIEWS_URL)
+                .bodyValue(review)
+                .exchange()
+                .expectStatus().isCreated()
+                .expectBody(Review.class)
+                .consumeWith(reviewResponse -> {
+                    var savedReview = reviewResponse.getResponseBody();
+                    assert savedReview != null;
+                    assertNotNull(savedReview.getReviewId());
+                });
+
+        // Assert & Act
+        var reviewsFlux = webTestClient
+                .get()
+                .uri(REVIEWS_URL + "/streams")
+                .exchange()
+                .expectStatus()
+                .is2xxSuccessful()
+                .returnResult(Review.class)
+                .getResponseBody();
+
+        // Verify above movie and then cancel the operation - since streaming is a long-running / continuous operation
+        StepVerifier.create(reviewsFlux)
+                .assertNext(review1 -> {
+                    assert review1.getReviewId() != null;
+                })
+                .thenCancel()
+                .verify();
     }
 }

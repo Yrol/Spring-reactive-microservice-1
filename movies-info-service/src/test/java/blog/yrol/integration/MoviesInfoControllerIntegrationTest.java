@@ -96,7 +96,7 @@ class MoviesInfoControllerIntegrationTest {
     }
     
     @Test
-    void testGetMovieInfoStream_whenCallingTheApi_returnNewlyCreatedMovies() {
+    void testGetMovieInfoStream_whenCallingTheApi_streamNewlyCreatedMovies() {
 
         // Arrange (creating the movie first - publisher)
         var movieInfo = new MovieInfo(null, "Spider-Man: Homecoming", 2005, List.of("Tom Holland"), LocalDate.parse("2017-06-15"));

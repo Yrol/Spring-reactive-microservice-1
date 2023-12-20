@@ -7,10 +7,12 @@ import blog.yrol.repository.ReviewReactiveRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.Sinks;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
@@ -22,6 +24,12 @@ public class ReviewHandler {
 
     @Autowired
     private Validator validator;
+
+    /**
+     * Creating Sink for the event publisher
+     * latest() - will make sure subscribers get only the latest data, ex: a newly joined subscriber will not see the history
+     * **/
+    Sinks.Many<Review> reviewsSink = Sinks.many().replay().latest();
 
     private final ReviewReactiveRepository reviewReactiveRepository;
 
@@ -39,6 +47,9 @@ public class ReviewHandler {
         return request.bodyToMono(Review.class)
                 .doOnNext(this::validate)
                 .flatMap(reviewReactiveRepository::save)
+                .doOnNext(review -> {
+                    reviewsSink.tryEmitNext(review);
+                })
                 .flatMap(savedReview ->
                         ServerResponse.status(HttpStatus.CREATED)
                                 .bodyValue(savedReview));
@@ -110,5 +121,15 @@ public class ReviewHandler {
 
             throw new ReviewDataException(errorMessage);
         }
+    }
+
+    /**
+     * A stream endpoint which will subscribe to the review emitted by addReview
+     * **/
+    public Mono<ServerResponse> getReviewsStream(ServerRequest serverRequest) {
+        return ServerResponse.ok()
+                .contentType(MediaType.APPLICATION_NDJSON)
+                .body(reviewsSink.asFlux(), Review.class)
+                .log();
     }
 }
