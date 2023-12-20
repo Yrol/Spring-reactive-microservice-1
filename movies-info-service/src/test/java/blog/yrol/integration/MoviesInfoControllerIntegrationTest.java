@@ -11,6 +11,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import reactor.test.StepVerifier;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -92,6 +93,45 @@ class MoviesInfoControllerIntegrationTest {
 //                    assert responseBody != null;
 //                    assertEquals(2, responseBody.size());
 //                });
+    }
+    
+    @Test
+    void testGetMovieInfoStream_whenCallingTheApi_returnNewlyCreatedMovies() {
+
+        // Arrange (creating the movie first - publisher)
+        var movieInfo = new MovieInfo(null, "Spider-Man: Homecoming", 2005, List.of("Tom Holland"), LocalDate.parse("2017-06-15"));
+
+        webTestClient
+                .post()
+                .uri(MOVIES_INFO_URL)
+                .bodyValue(movieInfo)
+                .exchange()
+                .expectStatus()
+                .isCreated()
+                .expectBody(MovieInfo.class)
+                .consumeWith(movieInfoEntityExchangeResult -> {
+                    var responseBody = movieInfoEntityExchangeResult.getResponseBody();
+                    assert responseBody != null;
+                    assertNotNull(responseBody.getMovieInfoId());
+                });
+
+        // Assert & Act (check if the newly created movie is emitted - subscriber)
+        var moviesStreamFlux = webTestClient
+                .get()
+                .uri(MOVIES_INFO_URL + "/streams")
+                .exchange()
+                .expectStatus()
+                .is2xxSuccessful()
+                .returnResult(MovieInfo.class)
+                .getResponseBody();
+
+        // Verify above movie and then cancel the operation - since streaming is a long-running / continuous operation
+        StepVerifier.create(moviesStreamFlux)
+                .assertNext(movieInfo1 -> {
+                   assert movieInfo1.getMovieInfoId() != null;
+                })
+                .thenCancel()
+                .verify();
     }
 
     @Test

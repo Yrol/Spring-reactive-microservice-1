@@ -3,10 +3,12 @@ package blog.yrol.controller;
 import blog.yrol.domain.MovieInfo;
 import blog.yrol.service.MovieInfoService;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.Sinks;
 
 import javax.validation.Valid;
 
@@ -16,6 +18,13 @@ public class MoviesInfoController {
 
     private MovieInfoService movieInfoService;
 
+
+    /**
+     * Creating Sink for the event publisher
+     * latest() - will make sure subscribers get only the latest data, ex: a newly joined subscriber will not see the history
+     * **/
+    Sinks.Many<MovieInfo> moviesInfoSink = Sinks.many().replay().latest();
+
     public MoviesInfoController(MovieInfoService movieInfoService) {
         this.movieInfoService = movieInfoService;
     }
@@ -23,7 +32,20 @@ public class MoviesInfoController {
     @PostMapping("/moviesinfo")
     @ResponseStatus(HttpStatus.CREATED)
     public Mono<MovieInfo> addMovieInfo(@RequestBody @Valid MovieInfo movieInfo) {
-        return movieInfoService.addMovieInfo(movieInfo).log();
+
+        /**
+         * Creating a movie and publishing an event to the Sink - to be consumed by the getMovieInfoStream endpoint
+         * **/
+        return movieInfoService.addMovieInfo(movieInfo)
+                .doOnNext(savedInfo -> moviesInfoSink.tryEmitNext(savedInfo));
+    }
+
+    /**
+     * A stream endpoint which will subscribe to the movies emitted by addMovieInfo
+     * **/
+    @GetMapping(value = "/moviesinfo/streams", produces = MediaType.APPLICATION_NDJSON_VALUE)
+    public Flux<MovieInfo> getMovieInfoStream() {
+        return moviesInfoSink.asFlux();
     }
 
     @GetMapping("/moviesinfo")
