@@ -170,7 +170,7 @@ public class ReviewsUnitTest {
         );
 
         // Arrange
-        when(reviewReactiveRepository.findReviewsByMovieInfoId((Long) any()))
+        when(reviewReactiveRepository.findReviewsByMovieInfoId((String) any()))
                 .thenReturn(Flux.fromIterable(reviews));
 
         // Act & Assert
@@ -189,7 +189,7 @@ public class ReviewsUnitTest {
         String movieInfoId = "1";
 
         // Arrange
-        when(reviewReactiveRepository.findReviewsByMovieInfoId((Long) any()))
+        when(reviewReactiveRepository.findReviewsByMovieInfoId((String) any()))
                 .thenReturn(Flux.empty());
 
 

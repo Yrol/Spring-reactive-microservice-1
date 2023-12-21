@@ -60,7 +60,7 @@ public class ReviewHandler {
         var movieInfoId = request.queryParam("movieInfoId");
 
         if(movieInfoId.isPresent()) {
-            var reviewsFlux = reviewReactiveRepository.findReviewsByMovieInfoId(Long.valueOf(movieInfoId.get()))
+            var reviewsFlux = reviewReactiveRepository.findReviewsByMovieInfoId(movieInfoId.get())
                     .switchIfEmpty(Mono.empty());
             return ServerResponse.ok().body(reviewsFlux, Review.class);
         }

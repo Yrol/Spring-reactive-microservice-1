@@ -7,5 +7,5 @@ import reactor.core.publisher.Flux;
 public interface ReviewReactiveRepository extends ReactiveMongoRepository<Review, String> {
 
     // Using the automatic query builder for getting all reviews by movie ID
-    Flux<Review> findReviewsByMovieInfoId(Long movieInfoId);
+    Flux<Review> findReviewsByMovieInfoId(String movieInfoId);
 }

@@ -1,0 +1,8 @@
+GET-MOVIES:
+------------
+curl -i http://localhost:8082/v1/movies/2
+
+
+MOVIES-STREAM
+------------
+curl -i http://localhost:8082/v1/movies/streams
