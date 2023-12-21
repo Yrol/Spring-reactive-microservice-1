@@ -3,12 +3,15 @@ package blog.yrol.controller;
 import blog.yrol.client.MoviesInfoRestClient;
 import blog.yrol.client.ReviewsRestClient;
 import blog.yrol.domain.Movie;
+import blog.yrol.domain.MovieInfo;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @RestController
@@ -47,6 +50,12 @@ public class MoviesController {
 
                     return reviewListMono.map(reviews -> new Movie(movieInfo, reviews));
                 });
+    }
+
+    @GetMapping(value = "/streams", produces = MediaType.APPLICATION_NDJSON_VALUE)
+    public Flux<MovieInfo> retrieveMoviesInfo() {
+
+        return moviesInfoRestClient.retrieveMoviesInfoStream();
     }
 
 }
