@@ -2,11 +2,16 @@ package blog.yrol.util;
 
 import blog.yrol.exception.MoviesInfoServerException;
 import blog.yrol.exception.ReviewsServerException;
+import lombok.extern.slf4j.Slf4j;
 import reactor.core.Exceptions;
 import reactor.util.retry.Retry;
 
 import java.time.Duration;
 
+/**
+ * A util class for externalising the Retry Logic
+ * **/
+@Slf4j
 public class RetryUtil {
 
     public static Retry retrySpec() {
@@ -19,6 +24,9 @@ public class RetryUtil {
          * **/
         return Retry.fixedDelay(3, Duration.ofSeconds(1))
                 .filter(ex -> ex instanceof MoviesInfoServerException || ex instanceof ReviewsServerException)
+                .doAfterRetry(retrySignal -> {
+                    log.info(String.format("Number of retries: %s", retrySignal.totalRetries()));
+                })
                 .onRetryExhaustedThrow(((retryBackoffSpec, retrySignal) ->
                         Exceptions.propagate(retrySignal.failure())));
     }
