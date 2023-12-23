@@ -12,6 +12,7 @@ import org.springframework.context.annotation.ComponentScan;
 
 @SpringBootApplication
 @EnableAutoConfiguration(exclude={MongoAutoConfiguration.class})
+@ComponentScan(basePackages = "blog.yrol")
 public class MovieReviewServiceApplication implements CommandLineRunner {
     public static final Logger LOG = LoggerFactory.getLogger(MovieReviewServiceApplication.class);
 

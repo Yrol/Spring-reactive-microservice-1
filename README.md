@@ -4,7 +4,7 @@ A simple Reactive RESTful microservices application developed using Spring Webfl
 
 ### Tech stack
 - Spring Boot
-- Mongo DB with Mongo Express admin panel
+- Mongo DB with Mongo Express admin tool
 - Docker
 
 ### Application architecture
@@ -23,24 +23,45 @@ A simple Reactive RESTful microservices application developed using Spring Webfl
 
 ### Build and run application via IntelliJ
 
-### Prerequisites
+#### Prerequisites
 - Mongo DB up and running locally (via Docker or local installation)
 
-### Steps
-- Starting Mongo DB in Docker: go to `docker` folder and execute the code below.
+#### Steps
+- **Step1:** Starting Mongo DB in Docker: go to `docker` folder and execute the code below.
     
     ```agsl
     docker-compose  -f common.yml -f mongo-service.yml up
     ```
   ![](https://i.imgur.com/d9NAkY2.png)
-- Starting the microservices: Run all 3 microservice in any order in intelliJ.
-    ![](https://i.imgur.com/XTuRgCy.png)
+- **Step2:** Starting the microservices: Run all 3 microservice in any order in intelliJ.
+
+  ![](https://i.imgur.com/XTuRgCy.png)
 
 ### Build and run application via Docker
-To be updated
+This will allow to build and run all the microservices and Mondo DB in Docker.
+
+#### Prerequisites
+- Docker installation
+
+
+#### Steps
+- **Step1:** The project needs to be built first using the command mvn install -DskipTests via intelliJ or in commandline. It should be executed under the root project `reactive-spring-webflux` as shown below.
+
+  ![](https://i.imgur.com/d8POEyR.png)
+- **Step 2:** Execute the following docker command inside the `docker` directory in order to bring up the Spring project and the Kafka servers.
+  ```
+  docker-compose up
+  ```
+  ![](https://i.imgur.com/1z3KUO3.png)
+
 
 ### Consuming the microservices via endpoints
 The cURL requests can be found in the `src/main/resources` folder of each project.
+
+### Mongo express
+Mongo Express can be used for accessing the data in the DB.
+The defualt credentials are "admin:pass"
+![](https://i.imgur.com/8yk8HAK.png)
 
 ### TDD Development
 Each microservice has its own set of test cases located in `src/test` folder, encompassing both unit and integration tests.
