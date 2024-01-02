@@ -45,7 +45,7 @@ This will allow to build and run all the microservices and Mondo DB in Docker.
 
 
 #### Steps
-- **Step1:** The project needs to be built first using the command mvn install -DskipTests via intelliJ or in commandline. It should be executed under the root project `reactive-spring-webflux` as shown below.
+- **Step1:** The project needs to be built first using the command `mvn install -DskipTests` via intelliJ or in commandline. It should be executed under the root project `reactive-spring-webflux` as shown below.
 
   ![](https://i.imgur.com/d8POEyR.png)
 - **Step 2:** Execute the following docker command inside the `docker` directory in order to bring up the Spring project and the Kafka servers.
