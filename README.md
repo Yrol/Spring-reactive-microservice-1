@@ -1,6 +1,6 @@
 ## Reactive Spring Webflux
 
-A simple Reactive RESTful microservices application developed using Spring Webflux.
+A simple Reactive RESTful microservices application developed using Spring Webflux
 
 ### Tech stack
 - Spring Boot
